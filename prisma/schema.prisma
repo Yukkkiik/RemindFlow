@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String     @id @default(cuid())
+  name       String
+  email      String     @unique
+  password   String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  categories Category[]
+  tasks      Task[]
+
+  @@map("users")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String   @default("#6366f1")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@unique([userId, name])
+  @@map("categories")
+}
+
+model Task {
+  id              String     @id @default(cuid())
+  userId          String
+  title           String
+  description     String?    @db.Text
+  dueDate         DateTime
+  dueTime         String
+  priority        Priority   @default(MEDIUM)
+  status          TaskStatus @default(TODO)
+  categoryId      String?
+  reminderEnabled Boolean    @default(true)
+  reminderOffset  Int        @default(0)
+  lastTriggeredAt DateTime?
+  snoozedUntil    DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  category        Category?  @relation(fields: [categoryId], references: [id])
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dueDate])
+  @@index([userId, status])
+  @@index([categoryId], map: "tasks_categoryId_fkey")
+  @@map("tasks")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+}
