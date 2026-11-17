@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { errorResponse } from "@/lib/errors";
 import { TaskService } from "@/server/services/task.service";
+import { alarmActionSchema } from "@/lib/validation/task.schema";
 
 export async function PATCH(
   request: Request,
@@ -12,18 +13,18 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    const action = body.action as "dismiss" | "snooze" | "complete";
-    const snoozeMinutes = body.snoozeMinutes ? Number(body.snoozeMinutes) : 5;
-
-    if (!["dismiss", "snooze", "complete"].includes(action)) {
+    const validation = alarmActionSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
         {
           success: false,
-          error: "Aksi alarm harus 'dismiss', 'snooze', atau 'complete'",
+          error: "Aksi alarm tidak valid (dismiss, snooze, atau complete; snooze 1-1440 menit)",
+          details: validation.error.format(),
         },
         { status: 400 }
       );
     }
+    const { action, snoozeMinutes } = validation.data;
 
     const updatedTask = await TaskService.handleAlarmAction(
       id,
