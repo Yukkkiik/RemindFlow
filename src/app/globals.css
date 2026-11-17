@@ -19,3 +19,10 @@ body {
     Cantarell,
     sans-serif;
 }
+
+/* Room for the bottom navigation bar that replaces the sidebar on small screens */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 4.5rem;
+  }
+}
