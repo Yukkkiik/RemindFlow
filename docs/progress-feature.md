@@ -59,7 +59,7 @@ Aturan:
 
 ## Test yang wajib ada (Vitest, pada `progress.ts`)
 
-Streak melewati tengah malam WIB · hari ini belum aktif tapi kemarin aktif · task dibuka kembali · batas on-time tepat di deadline · rentang tanpa data · beda timezone (UTC vs Asia/Jakarta) pada task yang selesai pukul 23:30 WIB.
+Streak melewati tengah malam WIB · hari ini belum aktif tapi kemarin aktif · task dibuka kembali · batas on-time tepat di deadline · rentang tanpa data · beda timezone (UTC vs Asia/Jakarta) pada task yang selesai pukul 00:30 WIB (= 17:30Z hari sebelumnya, hari berbeda di UTC), serta 23:30 WIB (= 16:30Z, hari yang sama di keduanya).
 
 ## Di luar scope versi pertama
 
