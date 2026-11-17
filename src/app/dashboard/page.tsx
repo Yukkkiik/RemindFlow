@@ -5,6 +5,7 @@ import Link from "next/link";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import StatCard from "@/components/dashboard/StatCard";
+import StreakCard from "@/components/progress/StreakCard";
 import TaskCard from "@/components/task/TaskCard";
 import TaskFormModal from "@/components/task/TaskFormModal";
 import DeleteConfirmModal from "@/components/task/DeleteConfirmModal";
@@ -179,6 +180,8 @@ export default function DashboardPage() {
               description="Tugas yang telah tuntas"
             />
           </div>
+
+          <StreakCard />
 
           {/* Today's Tasks Section */}
           <div className="space-y-4">

@@ -2,7 +2,7 @@
 
 interface StatCardProps {
   title: string;
-  value: number;
+  value: number | string;
   icon: string;
   colorScheme: "indigo" | "emerald" | "amber" | "rose" | "blue";
   description?: string;

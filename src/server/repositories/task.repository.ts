@@ -3,6 +3,7 @@ import { NotFoundError } from "@/lib/errors";
 import { Priority, TaskStatus, Prisma } from "@prisma/client";
 import { TaskWithCategory } from "@/types";
 import { dueDateDayRange } from "@/utils/date";
+import type { ProgressTask } from "@/lib/progress";
 
 export interface TaskFilterOptions {
   filter?: "ALL" | "TODAY" | "UPCOMING" | "COMPLETED";
@@ -267,6 +268,31 @@ export class TaskRepository {
       },
       include: { category: true },
     })) as TaskWithCategory;
+  }
+
+  /**
+   * Minimal columns for progress metrics: every completed task (streaks need the whole
+   * history) plus tasks whose due date falls in [dueFrom, dueTo].
+   */
+  static async findForProgress(
+    userId: string,
+    dueFrom: Date,
+    dueTo: Date
+  ): Promise<ProgressTask[]> {
+    return await prisma.task.findMany({
+      where: {
+        userId,
+        OR: [{ status: "COMPLETED" }, { dueDate: { gte: dueFrom, lte: dueTo } }],
+      },
+      select: {
+        status: true,
+        dueDate: true,
+        dueTime: true,
+        completedAt: true,
+        priority: true,
+        category: { select: { id: true, name: true, color: true } },
+      },
+    });
   }
 
   static async getStatistics(userId: string) {
