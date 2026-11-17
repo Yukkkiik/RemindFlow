@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { TaskWithCategory, Category, Priority, TaskStatus, REMINDER_OFFSETS } from "@/types";
+import { dayKey, timeKey } from "@/utils/date";
 
 interface TaskFormModalProps {
   isOpen: boolean;
@@ -27,24 +28,16 @@ function TaskFormModalContent({
 }: Omit<TaskFormModalProps, "isOpen">) {
   const isEditing = Boolean(taskToEdit);
 
-  const getTodayDateString = () => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  };
-
-  const getDefaultTime = () => {
-    const d = new Date();
-    d.setHours(d.getHours() + 1);
-    const hh = String(d.getHours()).padStart(2, "0");
-    return `${hh}:00`;
-  };
+  // Default deadline: next full hour, date and time read in the same timezone
+  const [nextHour] = useState(() => new Date(Date.now() + 60 * 60 * 1000));
+  const getDefaultTime = () => `${timeKey(nextHour).slice(0, 2)}:00`;
 
   const [title, setTitle] = useState(taskToEdit?.title ?? "");
   const [description, setDescription] = useState(taskToEdit?.description || "");
   const [dueDate, setDueDate] = useState(() =>
     taskToEdit
       ? new Date(taskToEdit.dueDate).toISOString().split("T")[0]
-      : getTodayDateString()
+      : dayKey(nextHour)
   );
   const [dueTime, setDueTime] = useState(() =>
     taskToEdit ? taskToEdit.dueTime || "12:00" : getDefaultTime()

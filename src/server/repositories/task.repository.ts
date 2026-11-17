@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NotFoundError } from "@/lib/errors";
 import { Priority, TaskStatus, Prisma } from "@prisma/client";
 import { TaskWithCategory } from "@/types";
+import { dueDateDayRange } from "@/utils/date";
 
 export interface TaskFilterOptions {
   filter?: "ALL" | "TODAY" | "UPCOMING" | "COMPLETED";
@@ -9,6 +10,20 @@ export interface TaskFilterOptions {
   priority?: Priority;
   categoryId?: string;
   search?: string;
+}
+
+/**
+ * Keeps the invariant `status === COMPLETED` <=> `completedAt != null`.
+ * Re-saving an already completed task keeps its original completion time.
+ */
+function completedAtFor(
+  nextStatus: TaskStatus,
+  current?: { status: TaskStatus; completedAt: Date | null } | null
+): Date | null {
+  if (nextStatus !== "COMPLETED") return null;
+  return current?.status === "COMPLETED" && current.completedAt
+    ? current.completedAt
+    : new Date();
 }
 
 export class TaskRepository {
@@ -46,18 +61,16 @@ export class TaskRepository {
 
     // Date/Status preset filter
     if (options.filter) {
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      const today = dueDateDayRange();
 
       if (options.filter === "TODAY") {
         where.dueDate = {
-          gte: startOfDay,
-          lte: endOfDay,
+          gte: today.start,
+          lt: today.end,
         };
       } else if (options.filter === "UPCOMING") {
         where.dueDate = {
-          gt: endOfDay,
+          gte: today.end,
         };
         where.status = {
           not: "COMPLETED",
@@ -113,6 +126,7 @@ export class TaskRepository {
         dueTime: data.dueTime,
         priority: data.priority ?? "MEDIUM",
         status: data.status ?? "TODO",
+        completedAt: completedAtFor(data.status ?? "TODO"),
         categoryId: data.categoryId || null,
         reminderEnabled: data.reminderEnabled ?? true,
         reminderOffset: data.reminderOffset ?? 0,
@@ -162,12 +176,12 @@ export class TaskRepository {
     }
 
     if (data.status !== undefined) {
+      const current = await prisma.task.findFirst({
+        where: { id, userId },
+        select: { status: true, completedAt: true },
+      });
       updateData.status = data.status;
-      if (data.status === "COMPLETED") {
-        updateData.completedAt = new Date();
-      } else {
-        updateData.completedAt = null;
-      }
+      updateData.completedAt = completedAtFor(data.status, current);
     }
 
     return (await prisma.task.update({
@@ -196,7 +210,7 @@ export class TaskRepository {
 
     const nextStatus: TaskStatus =
       existing.status === "COMPLETED" ? "TODO" : "COMPLETED";
-    const completedAt = nextStatus === "COMPLETED" ? new Date() : null;
+    const completedAt = completedAtFor(nextStatus, existing);
 
     return (await prisma.task.update({
       where: { id, userId },
@@ -249,16 +263,14 @@ export class TaskRepository {
       where: { id, userId },
       data: {
         status: "COMPLETED",
-        completedAt: new Date(),
+        completedAt: completedAtFor("COMPLETED", existing),
       },
       include: { category: true },
     })) as TaskWithCategory;
   }
 
   static async getStatistics(userId: string) {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const today = dueDateDayRange();
 
     const [total, todo, inProgress, completed, dueToday, highPriority] =
       await Promise.all([
@@ -269,7 +281,7 @@ export class TaskRepository {
         prisma.task.count({
           where: {
             userId,
-            dueDate: { gte: startOfDay, lte: endOfDay },
+            dueDate: { gte: today.start, lt: today.end },
             status: { not: "COMPLETED" },
           },
         }),
