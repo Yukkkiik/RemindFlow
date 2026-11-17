@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
-    "db:seed": "node --env-file=.env prisma/seed.mjs"
+    "db:seed": "node --env-file=.env prisma/seed.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -38,6 +39,7 @@
     "postcss": "^8.5.29",
     "prettier": "^3.9.9",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.12"
   }
 }
