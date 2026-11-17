@@ -40,30 +40,22 @@ export default function DashboardPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
 
-  const fetchDashboardData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [statsRes, todayRes, categoriesRes] = await Promise.all([
-        fetch("/api/dashboard/stats"),
-        fetch("/api/tasks?filter=TODAY"),
-        fetch("/api/categories"),
-      ]);
-
-      const [statsJson, todayJson, categoriesJson] = await Promise.all([
-        statsRes.json(),
-        todayRes.json(),
-        categoriesRes.json(),
-      ]);
-
-      if (statsJson.success) setStats(statsJson.data);
-      if (todayJson.success) setTodayTasks(todayJson.data);
-      if (categoriesJson.success) setCategories(categoriesJson.data);
-    } catch (err) {
-      console.error("Gagal memuat data dashboard:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchDashboardData = useCallback(
+    () =>
+      Promise.all(
+        ["/api/dashboard/stats", "/api/tasks?filter=TODAY", "/api/categories"].map((url) =>
+          fetch(url).then((res) => res.json())
+        )
+      )
+        .then(([statsJson, todayJson, categoriesJson]) => {
+          if (statsJson.success) setStats(statsJson.data);
+          if (todayJson.success) setTodayTasks(todayJson.data);
+          if (categoriesJson.success) setCategories(categoriesJson.data);
+        })
+        .catch((err) => console.error("Gagal memuat data dashboard:", err))
+        .finally(() => setLoading(false)),
+    []
+  );
 
   useEffect(() => {
     fetchDashboardData();

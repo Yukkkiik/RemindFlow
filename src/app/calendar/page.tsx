@@ -20,26 +20,19 @@ export default function CalendarPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
 
-  const fetchCalendarTasks = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [tasksRes, catRes] = await Promise.all([
-        fetch("/api/tasks"),
-        fetch("/api/categories"),
-      ]);
-      const [tasksJson, catJson] = await Promise.all([
-        tasksRes.json(),
-        catRes.json(),
-      ]);
-
-      if (tasksJson.success) setTasks(tasksJson.data);
-      if (catJson.success) setCategories(catJson.data);
-    } catch (err) {
-      console.error("Gagal memuat tugas kalender:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchCalendarTasks = useCallback(
+    () =>
+      Promise.all(
+        ["/api/tasks", "/api/categories"].map((url) => fetch(url).then((res) => res.json()))
+      )
+        .then(([tasksJson, catJson]) => {
+          if (tasksJson.success) setTasks(tasksJson.data);
+          if (catJson.success) setCategories(catJson.data);
+        })
+        .catch((err) => console.error("Gagal memuat tugas kalender:", err))
+        .finally(() => setLoading(false)),
+    []
+  );
 
   useEffect(() => {
     fetchCalendarTasks();

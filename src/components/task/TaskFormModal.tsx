@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { TaskWithCategory, Category, Priority, TaskStatus, REMINDER_OFFSETS } from "@/types";
 
 interface TaskFormModalProps {
@@ -12,14 +12,19 @@ interface TaskFormModalProps {
   onOpenCategoryModal?: () => void;
 }
 
-export default function TaskFormModal({
-  isOpen,
+export default function TaskFormModal({ isOpen, ...props }: TaskFormModalProps) {
+  if (!isOpen) return null;
+  // Mounted fresh on every open, so the form state initializes from taskToEdit
+  return <TaskFormModalContent key={props.taskToEdit?.id ?? "new"} {...props} />;
+}
+
+function TaskFormModalContent({
   onClose,
   onSuccess,
   taskToEdit,
   categories,
   onOpenCategoryModal,
-}: TaskFormModalProps) {
+}: Omit<TaskFormModalProps, "isOpen">) {
   const isEditing = Boolean(taskToEdit);
 
   const getTodayDateString = () => {
@@ -34,48 +39,24 @@ export default function TaskFormModal({
     return `${hh}:00`;
   };
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState(getTodayDateString());
-  const [dueTime, setDueTime] = useState(getDefaultTime());
-  const [priority, setPriority] = useState<Priority>("MEDIUM");
-  const [status, setStatus] = useState<TaskStatus>("TODO");
-  const [categoryId, setCategoryId] = useState<string>("");
-  const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [reminderOffset, setReminderOffset] = useState<number>(15);
+  const [title, setTitle] = useState(taskToEdit?.title ?? "");
+  const [description, setDescription] = useState(taskToEdit?.description || "");
+  const [dueDate, setDueDate] = useState(() =>
+    taskToEdit
+      ? new Date(taskToEdit.dueDate).toISOString().split("T")[0]
+      : getTodayDateString()
+  );
+  const [dueTime, setDueTime] = useState(() =>
+    taskToEdit ? taskToEdit.dueTime || "12:00" : getDefaultTime()
+  );
+  const [priority, setPriority] = useState<Priority>(taskToEdit?.priority ?? "MEDIUM");
+  const [status, setStatus] = useState<TaskStatus>(taskToEdit?.status ?? "TODO");
+  const [categoryId, setCategoryId] = useState<string>(taskToEdit?.categoryId || "");
+  const [reminderEnabled, setReminderEnabled] = useState(taskToEdit?.reminderEnabled ?? true);
+  const [reminderOffset, setReminderOffset] = useState<number>(taskToEdit?.reminderOffset ?? 15);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Populate or reset form whenever modal opens or taskToEdit changes
-  useEffect(() => {
-    if (taskToEdit) {
-      setTitle(taskToEdit.title);
-      setDescription(taskToEdit.description || "");
-
-      const dateStr = new Date(taskToEdit.dueDate).toISOString().split("T")[0];
-      setDueDate(dateStr);
-      setDueTime(taskToEdit.dueTime || "12:00");
-      setPriority(taskToEdit.priority);
-      setStatus(taskToEdit.status);
-      setCategoryId(taskToEdit.categoryId || "");
-      setReminderEnabled(taskToEdit.reminderEnabled);
-      setReminderOffset(taskToEdit.reminderOffset);
-    } else {
-      setTitle("");
-      setDescription("");
-      setDueDate(getTodayDateString());
-      setDueTime(getDefaultTime());
-      setPriority("MEDIUM");
-      setStatus("TODO");
-      setCategoryId("");
-      setReminderEnabled(true);
-      setReminderOffset(15);
-    }
-    setError(null);
-  }, [taskToEdit, isOpen]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

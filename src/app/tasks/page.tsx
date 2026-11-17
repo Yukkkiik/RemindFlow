@@ -40,51 +40,51 @@ function TasksContent() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
 
-  // Synchronize when URL search param changes
-  useEffect(() => {
-    const urlFilter = searchParams.get("filter") as TaskFilter | null;
+  // Synchronize when URL search param changes (adjusted during render, not in an effect)
+  const urlFilter = searchParams.get("filter") as TaskFilter | null;
+  const [prevUrlFilter, setPrevUrlFilter] = useState(urlFilter);
+  if (urlFilter !== prevUrlFilter) {
+    setPrevUrlFilter(urlFilter);
     if (urlFilter && ["ALL", "TODAY", "UPCOMING", "COMPLETED"].includes(urlFilter)) {
       setCurrentFilter(urlFilter);
     }
-  }, [searchParams]);
+  }
 
   // Fetch Categories
-  const fetchCategories = useCallback(async () => {
-    try {
-      const res = await fetch("/api/categories");
-      const json = await res.json();
-      if (json.success && json.data) {
-        setCategories(json.data);
-      }
-    } catch (err) {
-      console.error("Gagal memuat kategori:", err);
-    }
-  }, []);
+  const fetchCategories = useCallback(
+    () =>
+      fetch("/api/categories")
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && json.data) {
+            setCategories(json.data);
+          }
+        })
+        .catch((err) => console.error("Gagal memuat kategori:", err)),
+    []
+  );
 
   // Fetch Tasks
-  const fetchTasks = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      if (currentFilter !== "ALL") params.set("filter", currentFilter);
-      if (priority !== "ALL") params.set("priority", priority);
-      if (categoryId !== "ALL") params.set("categoryId", categoryId);
-      if (search.trim()) params.set("search", search.trim());
+  const fetchTasks = useCallback(() => {
+    const params = new URLSearchParams();
+    if (currentFilter !== "ALL") params.set("filter", currentFilter);
+    if (priority !== "ALL") params.set("priority", priority);
+    if (categoryId !== "ALL") params.set("categoryId", categoryId);
+    if (search.trim()) params.set("search", search.trim());
 
-      const res = await fetch(`/api/tasks?${params.toString()}`);
-      const json = await res.json();
-
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || "Gagal memuat daftar tugas");
-      }
-
-      setTasks(json.data || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan koneksi");
-    } finally {
-      setLoading(false);
-    }
+    return fetch(`/api/tasks?${params.toString()}`)
+      .then(async (res) => {
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || "Gagal memuat daftar tugas");
+        }
+        setTasks(json.data || []);
+        setError(null);
+      })
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Terjadi kesalahan koneksi")
+      )
+      .finally(() => setLoading(false));
   }, [currentFilter, priority, categoryId, search]);
 
   useEffect(() => {
