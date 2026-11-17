@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { playTestSound } from "@/utils/sound";
 
 interface HeaderProps {
@@ -13,6 +14,7 @@ export default function Header({
   subtitle = "Kelola tugas dan pengingat harianmu dengan tepat waktu",
 }: HeaderProps) {
   const [testStatus, setTestStatus] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleTestAlarm = async () => {
     // Request notification permission if default
@@ -30,6 +32,16 @@ export default function Header({
       setTestStatus("Suara Berbunyi! 🔔");
       setTimeout(() => setTestStatus(null), 2500);
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error(e);
+    }
+    router.replace("/login");
+    router.refresh();
   };
 
   return (
@@ -55,6 +67,14 @@ export default function Header({
         <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-semibold flex items-center justify-center text-xs shadow-xs">
           RF
         </div>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="px-3 py-1.5 rounded-full bg-white hover:bg-rose-50 text-xs text-slate-600 hover:text-rose-700 font-semibold border border-slate-200 hover:border-rose-200 transition-all cursor-pointer"
+        >
+          Keluar
+        </button>
       </div>
     </header>
   );

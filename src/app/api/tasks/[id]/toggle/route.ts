@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { errorResponse } from "@/lib/errors";
 import { TaskService } from "@/server/services/task.service";
 
 export async function PATCH(
@@ -18,13 +19,6 @@ export async function PATCH(
       data: updatedTask,
     });
   } catch (error) {
-    console.error("PATCH /api/tasks/[id]/toggle error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Gagal mengubah status tugas",
-      },
-      { status: 500 }
-    );
+    return errorResponse(error, "Gagal mengubah status tugas");
   }
 }

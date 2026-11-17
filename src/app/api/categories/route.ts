@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { errorResponse } from "@/lib/errors";
 import { CategoryService } from "@/server/services/category.service";
 import { createCategorySchema } from "@/lib/validation/category.schema";
 
@@ -13,14 +14,7 @@ export async function GET() {
       data: categories,
     });
   } catch (error) {
-    console.error("GET /api/categories error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Gagal memuat kategori",
-      },
-      { status: 500 }
-    );
+    return errorResponse(error, "Gagal memuat kategori");
   }
 }
 
@@ -52,13 +46,6 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("POST /api/categories error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Gagal membuat kategori",
-      },
-      { status: 400 }
-    );
+    return errorResponse(error, "Gagal membuat kategori");
   }
 }

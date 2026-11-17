@@ -14,6 +14,7 @@ export interface ApiResponse<T = unknown> {
   message?: string;
   data?: T;
   error?: string;
+  details?: unknown;
 }
 
 export interface UserSession {

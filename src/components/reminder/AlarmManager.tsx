@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { TaskWithCategory } from "@/types";
 import { calculateReminderTriggerTime } from "@/utils/date";
 import { startAlarmSound, stopAlarmSound, playTestSound } from "@/utils/sound";
@@ -10,6 +11,9 @@ export default function AlarmManager() {
   const [activeAlarmTask, setActiveAlarmTask] = useState<TaskWithCategory | null>(null);
   const tasksRef = useRef<TaskWithCategory[]>([]);
   const triggeredIdsRef = useRef<Set<string>>(new Set());
+  const pathname = usePathname();
+  // No session on login/register pages, so don't poll the API there
+  const isAuthPage = pathname === "/login" || pathname === "/register";
 
   // Unlock AudioContext on first user interaction anywhere on page
   useEffect(() => {
@@ -71,6 +75,11 @@ export default function AlarmManager() {
 
   // Check alarm times every 5 seconds
   useEffect(() => {
+    if (isAuthPage) {
+      tasksRef.current = [];
+      return;
+    }
+
     fetchTasksForReminders();
     const fetchInterval = setInterval(fetchTasksForReminders, 15000);
 
@@ -118,7 +127,7 @@ export default function AlarmManager() {
       clearInterval(fetchInterval);
       clearInterval(checkInterval);
     };
-  }, [fetchTasksForReminders, triggerAlarm, activeAlarmTask]);
+  }, [fetchTasksForReminders, triggerAlarm, activeAlarmTask, isAuthPage]);
 
   // Alarm actions
   const handleDismiss = async () => {

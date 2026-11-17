@@ -1,4 +1,5 @@
 import { TaskRepository, TaskFilterOptions } from "../repositories/task.repository";
+import { BadRequestError, NotFoundError } from "@/lib/errors";
 import { CreateTaskInput, UpdateTaskInput } from "@/lib/validation/task.schema";
 import { CategoryRepository } from "../repositories/category.repository";
 
@@ -10,7 +11,7 @@ export class TaskService {
   static async getTaskById(id: string, userId: string) {
     const task = await TaskRepository.findById(id, userId);
     if (!task) {
-      throw new Error("Tugas tidak ditemukan");
+      throw new NotFoundError("Tugas tidak ditemukan");
     }
     return task;
   }
@@ -19,7 +20,7 @@ export class TaskService {
     if (input.categoryId) {
       const category = await CategoryRepository.findById(input.categoryId, userId);
       if (!category) {
-        throw new Error("Kategori yang dipilih tidak valid atau tidak ditemukan");
+        throw new BadRequestError("Kategori yang dipilih tidak valid atau tidak ditemukan");
       }
     }
 
@@ -39,13 +40,13 @@ export class TaskService {
   static async updateTask(id: string, userId: string, input: UpdateTaskInput) {
     const existing = await TaskRepository.findById(id, userId);
     if (!existing) {
-      throw new Error("Tugas tidak ditemukan");
+      throw new NotFoundError("Tugas tidak ditemukan");
     }
 
     if (input.categoryId) {
       const category = await CategoryRepository.findById(input.categoryId, userId);
       if (!category) {
-        throw new Error("Kategori yang dipilih tidak valid");
+        throw new BadRequestError("Kategori yang dipilih tidak valid");
       }
     }
 
@@ -65,7 +66,7 @@ export class TaskService {
   static async deleteTask(id: string, userId: string) {
     const existing = await TaskRepository.findById(id, userId);
     if (!existing) {
-      throw new Error("Tugas tidak ditemukan");
+      throw new NotFoundError("Tugas tidak ditemukan");
     }
     return await TaskRepository.delete(id, userId);
   }

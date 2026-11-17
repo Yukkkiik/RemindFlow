@@ -2,9 +2,22 @@
 
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
+import { useEffect, useState } from "react";
 import { playTestSound } from "@/utils/sound";
+import { UserSession } from "@/types";
 
 export default function SettingsPage() {
+  const [user, setUser] = useState<UserSession | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success) setUser(json.data);
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar />
@@ -34,14 +47,14 @@ export default function SettingsPage() {
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                 <span className="text-slate-400 font-medium block mb-1">Nama</span>
                 <span className="font-semibold text-slate-800 text-sm">
-                  Pengguna RemindFlow
+                  {user?.name ?? "-"}
                 </span>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                 <span className="text-slate-400 font-medium block mb-1">Email</span>
                 <span className="font-semibold text-slate-800 text-sm">
-                  user@remindflow.local
+                  {user?.email ?? "-"}
                 </span>
               </div>
             </div>

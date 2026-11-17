@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { errorResponse } from "@/lib/errors";
 import { TaskService } from "@/server/services/task.service";
 
 export async function GET() {
@@ -12,13 +13,6 @@ export async function GET() {
       data: stats,
     });
   } catch (error) {
-    console.error("GET /api/dashboard/stats error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Gagal memuat statistik",
-      },
-      { status: 500 }
-    );
+    return errorResponse(error, "Gagal memuat statistik");
   }
 }

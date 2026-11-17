@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { errorResponse } from "@/lib/errors";
 import { TaskService } from "@/server/services/task.service";
 import { createTaskSchema, taskQuerySchema } from "@/lib/validation/task.schema";
 import { Priority, TaskStatus } from "@prisma/client";
@@ -41,14 +42,7 @@ export async function GET(request: Request) {
       data: tasks,
     });
   } catch (error) {
-    console.error("GET /api/tasks error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Terjadi kesalahan server",
-      },
-      { status: 500 }
-    );
+    return errorResponse(error, "Terjadi kesalahan server");
   }
 }
 
@@ -80,13 +74,6 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("POST /api/tasks error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Gagal membuat tugas",
-      },
-      { status: 500 }
-    );
+    return errorResponse(error, "Gagal membuat tugas");
   }
 }

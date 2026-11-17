@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { errorResponse } from "@/lib/errors";
 import { TaskService } from "@/server/services/task.service";
 import { updateTaskSchema } from "@/lib/validation/task.schema";
 
@@ -18,14 +19,7 @@ export async function GET(
       data: task,
     });
   } catch (error) {
-    console.error("GET /api/tasks/[id] error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Tugas tidak ditemukan",
-      },
-      { status: 404 }
-    );
+    return errorResponse(error, "Tugas tidak ditemukan");
   }
 }
 
@@ -58,14 +52,7 @@ export async function PATCH(
       data: updatedTask,
     });
   } catch (error) {
-    console.error("PATCH /api/tasks/[id] error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Gagal memperbarui tugas",
-      },
-      { status: 500 }
-    );
+    return errorResponse(error, "Gagal memperbarui tugas");
   }
 }
 
@@ -91,13 +78,6 @@ export async function DELETE(
       message: "Tugas berhasil dihapus",
     });
   } catch (error) {
-    console.error("DELETE /api/tasks/[id] error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Gagal menghapus tugas",
-      },
-      { status: 500 }
-    );
+    return errorResponse(error, "Gagal menghapus tugas");
   }
 }

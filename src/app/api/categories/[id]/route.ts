@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { errorResponse } from "@/lib/errors";
 import { CategoryService } from "@/server/services/category.service";
 import { updateCategorySchema } from "@/lib/validation/category.schema";
 
@@ -32,14 +33,7 @@ export async function PATCH(
       data: updated,
     });
   } catch (error) {
-    console.error("PATCH /api/categories/[id] error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Gagal memperbarui kategori",
-      },
-      { status: 500 }
-    );
+    return errorResponse(error, "Gagal memperbarui kategori");
   }
 }
 
@@ -58,13 +52,6 @@ export async function DELETE(
       message: "Kategori berhasil dihapus",
     });
   } catch (error) {
-    console.error("DELETE /api/categories/[id] error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Gagal menghapus kategori",
-      },
-      { status: 500 }
-    );
+    return errorResponse(error, "Gagal menghapus kategori");
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { errorResponse } from "@/lib/errors";
 import { TaskService } from "@/server/services/task.service";
 
 export async function PATCH(
@@ -37,13 +38,6 @@ export async function PATCH(
       data: updatedTask,
     });
   } catch (error) {
-    console.error("PATCH /api/tasks/[id]/alarm error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Gagal memproses aksi alarm",
-      },
-      { status: 500 }
-    );
+    return errorResponse(error, "Gagal memproses aksi alarm");
   }
 }

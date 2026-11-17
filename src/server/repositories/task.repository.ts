@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { NotFoundError } from "@/lib/errors";
 import { Priority, TaskStatus, Prisma } from "@prisma/client";
 import { TaskWithCategory } from "@/types";
 
@@ -190,7 +191,7 @@ export class TaskRepository {
   static async toggleStatus(id: string, userId: string): Promise<TaskWithCategory> {
     const existing = await this.findById(id, userId);
     if (!existing) {
-      throw new Error("Tugas tidak ditemukan");
+      throw new NotFoundError("Tugas tidak ditemukan");
     }
 
     const nextStatus: TaskStatus =
@@ -217,7 +218,7 @@ export class TaskRepository {
   ): Promise<TaskWithCategory> {
     const existing = await this.findById(id, userId);
     if (!existing) {
-      throw new Error("Tugas tidak ditemukan");
+      throw new NotFoundError("Tugas tidak ditemukan");
     }
 
     if (action === "dismiss") {
