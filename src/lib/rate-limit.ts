@@ -28,6 +28,15 @@ export function assertRateLimit(key: string, limit: number, windowMs: number): v
   }
 }
 
+/**
+ * Client IP as set by the hosting proxy. The first X-Forwarded-For entry is client-controlled,
+ * so prefer x-real-ip, then the last entry (appended by the nearest proxy).
+ * shortcut: assumes exactly one trusted proxy in front; without one the IP is spoofable,
+ * so login also has an IP-independent per-email limit.
+ */
 export function getClientIp(request: Request): string {
-  return request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  if (realIp) return realIp;
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",");
+  return forwarded?.[forwarded.length - 1].trim() || "unknown";
 }

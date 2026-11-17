@@ -21,7 +21,10 @@ export async function POST(request: Request) {
       );
     }
 
-    assertRateLimit(`login:${getClientIp(request)}:${validation.data.email}`, 10, 15 * 60 * 1000);
+    const fifteenMinutes = 15 * 60 * 1000;
+    assertRateLimit(`login:${getClientIp(request)}:${validation.data.email}`, 10, fifteenMinutes);
+    // Not tied to the (spoofable) IP, so rotating headers cannot lift the cap on one account
+    assertRateLimit(`login-email:${validation.data.email}`, 30, fifteenMinutes);
     const user = await AuthService.login(validation.data);
     await createSession(user.id);
 
